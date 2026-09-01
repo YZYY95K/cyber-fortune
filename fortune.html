@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵境·赛博占卜</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+
+  :root {
+    --sage-50: #f6f9f6;
+    --sage-100: #e8f0e8;
+    --sage-200: #c8dcc8;
+    --sage-300: #a3c9a3;
+    --sage-400: #7ab07a;
+    --sage-500: #5a9a5a;
+    --sage-600: #4a7e4a;
+    --sage-700: #3d663d;
+    --sage-800: #345234;
+    --sage-900: #2c442c;
+    --mint: #b8e6c8;
+    --emerald: #2d8a6e;
+    --gold: #c9a84c;
+    --rose: #e8c4c4;
+    --bg: #0d1a0d;
+    --card-bg: rgba(22, 42, 22, 0.85);
+    --glass: rgba(30, 55, 30, 0.6);
+    --text: #d4e8d4;
+    --text-dim: #8ba88b;
+    --accent: #5a9a5a;
+    --accent-glow: rgba(90, 154, 90, 0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 星空粒子背景 */
+  #particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    animation: floatUp linear infinite;
+    opacity: 0;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  }
+
+  /* 主容器 */
+  .app {
+    position: relative;
+    z-index: 1;
+    width: 420px;
+    max-width: 95vw;
+    min-height: 600px;
+    padding: 20px;
+  }
+
+  /* 标题 */
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .header .icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+    animation: crystalPulse 3s ease-in-out infinite;
+  }
+  @keyframes crystalPulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(90,154,90,0.5)); }
+    50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(90,154,90,0.8)); }
+  }
+  .header h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #b8e6c8, #7ab07a, #5a9a5a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header .sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 4px;
+    margin-top: 4px;
+  }
+
+  /* 卡片 */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid rgba(90, 154, 90, 0.25);
+    border-radius: 20px;
+    padding: 28px 24px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(90, 154, 90, 0.1);
+    transition: all 0.4s ease;
+  }
+
+  /* 模式选择 */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .mode-btn {
+    background: var(--glass);
+    border: 1px solid rgba(90, 154, 90, 0.2);
+    border-radius: 14px;
+    padding: 14px 10px;
+    cursor: pointer;
+    color: var(--text);
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .mode-btn:hover {
+    border-color: var(--accent);
+    background: rgba(90, 154, 90, 0.15);
+    transform: translateY(-2px);
+  }
+  .mode-btn.active {
+    border-color: var(--accent);
+    background: rgba(90, 154, 90, 0.2);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .mode-btn .emoji { font-size: 24px; }
+  .mode-btn .label { font-size: 13px; }
+
+  /* 输入区 */
+  .input-group {
+    margin-bottom: 16px;
+  }
+  .input-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .input-group input, .input-group textarea {
+    width: 100%;
+    background: rgba(15, 30, 15, 0.6);
+    border: 1px solid rgba(90, 154, 90, 0.3);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+  .input-group input:focus, .input-group textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 16px var(--accent-glow);
+  }
+  .input-group input::placeholder, .input-group textarea::placeholder {
+    color: rgba(139, 168, 139, 0.5);
+  }
+  .input-group textarea {
+    resize: none;
+    height: 60px;
+  }
+  .inline-inputs {
+    display: flex;
+    gap: 10px;
+  }
+  .inline-inputs .input-group { flex: 1; }
+
+  /* 按钮 */
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #4a7e4a, #5a9a5a);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(90, 154, 90, 0.3);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 28px rgba(90, 154, 90, 0.5);
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* 结果区 */
+  .result {
+    display: none;
+    text-align: center;
+    animation: fadeIn 0.6s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .result.show { display: block; }
+
+  .result-crystal {
+    font-size: 56px;
+    margin: 10px 0;
+    animation: crystalReveal 0.8s ease;
+  }
+  @keyframes crystalReveal {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    60% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  .result-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--glass);
+    border: 1px solid rgba(90, 154, 90, 0.3);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .result-score .star { color: var(--gold); font-size: 16px; }
+
+  .result-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #b8e6c8;
+    margin-bottom: 6px;
+  }
+  .result-subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+
+  .result-divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 0 auto 16px;
+  }
+
+  .result-detail {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text);
+    text-align: left;
+    padding: 16px;
+    background: rgba(15, 30, 15, 0.4);
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  .result-detail .item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(90, 154, 90, 0.1);
+  }
+  .result-detail .item:last-child { border: none; }
+  .result-detail .item .key { color: var(--text-dim); }
+  .result-detail .item .val { color: var(--text); font-weight: 500; }
+
+  .result-advice {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    color: var(--mint);
+    line-height: 1.8;
+    padding: 14px 16px;
+    background: rgba(90, 154, 90, 0.08);
+    border-radius: 12px;
+    border-left: 3px solid var(--accent);
+    text-align: left;
+    margin-bottom: 16px;
+  }
+
+  .result-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .tag {
+    background: rgba(90, 154, 90, 0.15);
+    border: 1px solid rgba(90, 154, 90, 0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: var(--mint);
+  }
+
+  .btn-back {
+    background: transparent;
+    border: 1px solid rgba(90, 154, 90, 0.3);
+    border-radius: 12px;
+    padding: 10px 28px;
+    color: var(--text-dim);
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .btn-back:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(90, 154, 90, 0.1);
+  }
+
+  /* 加载动画 */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px 0;
+  }
+  .loading.show { display: block; }
+  .loading-ring {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(90, 154, 90, 0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+  }
+
+  /* 隐藏 */
+  .hidden { display: none !important; }
+
+  /* 响应式 */
+  @media (max-width: 440px) {
+    .app { padding: 16px; }
+    .card { padding: 20px 16px; }
+    .header h1 { font-size: 24px; }
+    .mode-grid { gap: 8px; }
+    .mode-btn { padding: 12px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="particles"></div>
+
+<div class="app">
+  <div class="header">
+    <div class="icon">🔮</div>
+    <h1>灵境 · 赛博占卜</h1>
+    <div class="sub">YOUR CYBER ORACLE</div>
+  </div>
+
+  <!-- 输入卡片 -->
+  <div class="card" id="inputCard">
+    <div class="mode-grid" id="modeGrid">
+      <button class="mode-btn active" data-mode="daily">
+        <span class="emoji">✨</span>
+        <span class="label">今日运势</span>
+      </button>
+      <button class="mode-btn" data-mode="love">
+        <span class="emoji">💗</span>
+        <span class="label">桃花运</span>
+      </button>
+      <button class="mode-btn" data-mode="career">
+        <span class="emoji">🌟</span>
+        <span class="label">事业 / 学业</span>
+      </button>
+      <button class="mode-btn" data-mode="mood">
+        <span class="emoji">🌿</span>
+        <span class="label">心情疗愈</span>
+      </button>
+    </div>
+
+    <div class="input-group">
+      <label>你的昵称</label>
+      <input type="text" id="nameInput" placeholder="输入你的名字或昵称…" maxlength="20">
+    </div>
+
+    <div class="inline-inputs">
+      <div class="input-group">
+        <label>星座（选填）</label>
+        <input type="text" id="zodiacInput" placeholder="如：双子座" maxlength="10">
+      </div>
+      <div class="input-group">
+        <label>MBTI（选填）</label>
+        <input type="text" id="mbtiInput" placeholder="如：INFJ" maxlength="8">
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>心里想问的事（选填）</label>
+      <textarea id="questionInput" placeholder="悄悄告诉水晶球你想知道什么…"></textarea>
+    </div>
+
+    <button class="btn-primary" id="submitBtn">🔮 开启占卜</button>
+  </div>
+
+  <!-- 加载 -->
+  <div class="card loading" id="loadingCard">
+    <div class="loading-ring"></div>
+    <div class="loading-text">水晶球正在感应你的能量…</div>
+  </div>
+
+  <!-- 结果卡片 -->
+  <div class="card result" id="resultCard">
+    <div class="result-crystal" id="resultCrystal"></div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-subtitle" id="resultSubtitle"></div>
+    <div class="result-divider"></div>
+    <div class="result-detail" id="resultDetail"></div>
+    <div class="result-advice" id="resultAdvice"></div>
+    <div class="result-tags" id="resultTags"></div>
+    <button class="btn-back" onclick="resetApp()">再算一次</button>
+  </div>
+</div>
+
+<script>
+// ============ 粒子背景 ============
+const particlesEl = document.getElementById('particles');
+const symbols = ['✦', '✧', '⋆', '·', '✿', '🍃', '✨', '🔮', '🌿', '💚'];
+for (let i = 0; i < 50; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.width = p.style.height = (Math.random() * 8 + 2) + 'px';
+  p.style.background = ['#5a9a5a', '#b8e6c8', '#7ab07a', '#c9a84c'][Math.floor(Math.random() * 4)];
+  p.style.animationDuration = (Math.random() * 12 + 8) + 's';
+  p.style.animationDelay = Math.random() * 10 + 's';
+  p.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+  p.style.fontSize = (Math.random() * 10 + 6) + 'px';
+  p.style.color = p.style.background;
+  p.style.background = 'transparent';
+  particlesEl.appendChild(p);
+}
+
+// ============ 模式选择 ============
+let currentMode = 'daily';
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+  });
+});
+
+// ============ 占卜数据 ============
+const fortuneData = {
+  daily: {
+    crystals: ['🔮', '💎', '🪬', '🌙', '⭐', '🧿'],
+    scores: [3, 4, 5],
+    titles: [
+      '今天是被宇宙偏爱的一天', '好运正在悄悄靠近你', '平稳中藏着惊喜',
+      '今天是你的小确幸日', '能量满满，所向披靡', '适合放慢脚步的一天'
+    ],
+    subtitles: [
+      '宜：大胆尝试 | 忌：自我怀疑', '宜：记录美好 | 忌：过度焦虑',
+      '宜：和朋友聊天 | 忌：熬夜刷手机', '宜：给自己买个小礼物 | 忌：否定自己',
+      '宜：表达爱意 | 忌：憋在心里', '宜：早睡早起 | 忌：胡思乱想'
+    ],
+    details: (s) => [
+      { key: '幸运色', val: ['薄荷绿', '雾霾蓝', '奶油黄', '淡紫色', '蜜桃粉'][s % 5] },
+      { key: '幸运数字', val: String(Math.floor(Math.random() * 9) + 1) },
+      { key: '幸运方位', val: ['东南', '正北', '西南', '正东'][s % 4] },
+      { key: '今日能量', val: ['温柔而坚定', '轻盈而敏锐', '热烈而专注', '沉静而有力量'][s % 4] },
+    ],
+    advices: [
+      '今天的你，像清晨叶片上的露珠一样清澈。不要急着赶路，偶尔停下来看看路边的花。你值得被温柔对待，尤其是来自你自己的温柔。',
+      '宇宙在告诉你：你已经足够好了。不需要成为别人眼中的完美，做真实的自己就是最美的样子。今天会有意想不到的小惊喜哦。',
+      '今天适合做一些让自己开心的小事——买一束花、听一首老歌、给好久不见的朋友发条消息。快乐不需要理由，你就是自己的小太阳。',
+      '如果今天感到疲惫，那就允许自己休息。你不是机器，不需要时刻运转。躺平一会儿，世界不会因此崩塌，但你会因此恢复元气。',
+      '今天的你散发着独特的光芒，会吸引到对的人和事。相信直觉，它比你以为的更聪明。勇敢一点，你想要的东西正在向你走来。',
+    ],
+    tags: ['#治愈系', '#元气满满', '#善待自己', '#今天也要开心', '#GirlPower', '#小确幸']
+  },
+  love: {
+    crystals: ['💗', '💝', '💖', '🌸', '🦋', '💕'],
+    scores: [3, 4, 5],
+    titles: [
+      '桃花正在路上', '你的魅力无人能挡', '爱自己是一切浪漫的开始',
+      '有缘人正在靠近', '你的温柔值得被看见', '心动信号即将出现'
+    ],
+    subtitles: [
+      '单身：转角遇到惊喜 | 恋爱中：甜蜜升级', '单身：先爱自己 | 恋爱中：彼此成长',
+      '单身：享受独处时光 | 恋爱中：小别胜新婚', '单身：朋友变恋人？| 恋爱中：浪漫升温'
+    ],
+    details: (s) => [
+      { key: '桃花指数', val: '🌸'.repeat(s + 1) },
+      { key: '缘分色', val: ['玫瑰粉', '薰衣草紫', '蜜桃橙', '月光白'][s % 4] },
+      { key: '最佳邂逅地', val: ['咖啡馆', '书店', '公园', '美术馆'][s % 4] },
+      { key: '心动信号', val: ['眼神交汇', '偶然相遇', '共同爱好', '朋友介绍'][s % 4] },
+    ],
+    advices: [
+      '在遇见对的人之前，请先成为对的自己。你不需要为任何人改变，真正爱你的人会爱你的全部——包括你的小脾气和不完美。',
+      '爱情不是生活的全部，但好的爱情会让生活发光。如果还没遇到，别着急，最好的总在不经意间出现。如果已经拥有，记得珍惜眼前人。',
+      '你的温柔和善良是最美的底色。不要因为害怕受伤就封闭自己，勇敢去爱，但也要记得保护好自己的心。你是值得被偏爱的。',
+      '有时候，最大的浪漫不是鲜花和礼物，而是对方记得你爱喝几分糖的奶茶。细节里的爱，最让人心动。',
+      '相信自己的直觉。如果一段关系让你感到不安和消耗，那就不值得留恋。离开错的，才能和对的相遇。你是自己人生的主角。',
+    ],
+    tags: ['#浪漫体质', '#爱自己', '#值得被爱', '#心动信号', '#GirlsTalk', '#甜甜的恋爱']
+  },
+  career: {
+    crystals: ['🌟', '💫', '🎯', '🚀', '📚', '💡'],
+    scores: [3, 4, 5],
+    titles: [
+      '事业运稳步上升', '你的努力即将被看见', '灵感正在萌芽',
+      '突破瓶颈的时刻到了', '学习运爆棚的一天', '贵人即将出现'
+    ],
+    subtitles: [
+      '宜：主动表达观点 | 忌：自我设限', '宜：学习新技能 | 忌：拖延症发作',
+      '宜：团队合作 | 忌：单打独斗', '宜：整理计划 | 忌：盲目行动'
+    ],
+    details: (s) => [
+      { key: '事业能量', val: ['创意爆发', '执行力MAX', '沟通力UP', '学习力UP'][s % 4] },
+      { key: '关键时间', val: ['上午10点', '下午3点', '傍晚6点', '深夜灵感'][s % 4] },
+      { key: '助力星座', val: ['金牛座', '处女座', '天蝎座', '摩羯座'][s % 4] },
+      { key: '今日箴言', val: ['厚积薄发', '步步为营', '乘风破浪', '脚踏实地'][s % 4] },
+    ],
+    advices: [
+      '你比自己想象的更有能力。不要因为一次失败就否定自己，每一次跌倒都是成长的养料。你正在成为更好的自己，这本身就值得骄傲。',
+      '今天的你精力充沛，适合处理那些一直拖延的事情。完成后的成就感，比任何奶茶都让人满足。加油，你可以的！',
+      '如果感到迷茫，不妨停下来问问自己：我真正想要的是什么？不要活在别人的期待里，你的人生剧本由你自己执笔。',
+      '善待自己的节奏。有人22岁就毕业了，但等了5年才找到好工作；有人25岁就当上CEO，却在50岁去世。你的人生不需要和别人比较。',
+      '机会往往伪装成困难出现。如果今天遇到了挑战，那不是命运在刁难你，而是宇宙在帮你升级。跨过去，你会发现自己比想象中强大。',
+    ],
+    tags: ['#事业运', '#学习使我快乐', '#GirlBoss', '#自律即自由', '#成为更好的自己', '#未来可期']
+  },
+  mood: {
+    crystals: ['🌿', '🍃', '🌱', '🕊️', '🌊', '🧘'],
+    scores: [3, 4, 5],
+    titles: [
+      '今天的心情是薄荷味的', '内心正在重获平静', '被这个世界温柔拥抱',
+      '情绪在慢慢舒展', '你比自己想象的更坚强', '允许一切发生'
+    ],
+    subtitles: [
+      '疗愈关键词：接纳 | 疗愈关键词：释放',
+      '疗愈关键词：温柔 | 疗愈关键词：放松',
+      '疗愈关键词：呼吸 | 疗愈关键词：感恩'
+    ],
+    details: (s) => [
+      { key: '情绪色', val: ['森林绿', '天空蓝', '暖阳黄', '薰衣草紫'][s % 4] },
+      { key: '疗愈方式', val: ['泡一杯热茶', '去公园散步', '听治愈歌单', '写日记'][s % 4] },
+      { key: '今日能量', val: ['温柔', '平静', '温暖', '轻盈'][s % 4] },
+      { key: '给自己的一句话', val: ['你值得被爱', '一切都会好的', '你已经很棒了', '慢慢来比较快'][s % 4] },
+    ],
+    advices: [
+      '如果今天感到疲惫或难过，请允许自己脆弱。你不需要时刻坚强，偶尔的眼泪是心灵的清洁剂。哭完擦干眼泪，你依然是那个闪闪发光的女孩。',
+      '焦虑的时候，试试深呼吸。吸气——把世界的温柔吸进心里；呼气——把所有的不安放归自然。你值得拥有内心的平静。',
+      '今天为自己做一件小事：泡一杯花茶，看一部治愈电影，或者什么也不做，只是发呆。你不是在浪费时间，你是在给自己的心灵充电。',
+      '不要和别人比较。每个人的花期不同，有人春天绽放，有人冬天盛开。你在自己的时区里，一切都刚刚好。',
+      '记住，你的感受是重要的。不需要为了取悦别人而委屈自己。设立边界不是自私，而是自爱。你今天有好好照顾自己的情绪吗？',
+    ],
+    tags: ['#情绪疗愈', '#自我关怀', '#松弛感', '#心灵SPA', '#温柔力量', '#与自己和解']
+  }
+};
+
+// ============ 提交 ============
+document.getElementById('submitBtn').addEventListener('click', () => {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) {
+    document.getElementById('nameInput').focus();
+    document.getElementById('nameInput').style.borderColor = '#e88';
+    setTimeout(() => document.getElementById('nameInput').style.borderColor = '', 1500);
+    return;
+  }
+
+  // 显示加载
+  document.getElementById('inputCard').classList.add('hidden');
+  document.getElementById('loadingCard').classList.add('show');
+  document.getElementById('resultCard').classList.remove('show');
+
+  // 模拟占卜延迟
+  setTimeout(() => {
+    generateResult(name);
+    document.getElementById('loadingCard').classList.remove('show');
+    document.getElementById('resultCard').classList.add('show');
+    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+  }, 1800 + Math.random() * 800);
+});
+
+// ============ 生成结果 ============
+function generateResult(name) {
+  const zodiac = document.getElementById('zodiacInput').value.trim();
+  const mbti = document.getElementById('mbtiInput').value.trim();
+  const question = document.getElementById('questionInput').value.trim();
+  const data = fortuneData[currentMode];
+
+  // 根据名字生成种子
+  let seed = 0;
+  for (let i = 0; i < name.length; i++) seed += name.charCodeAt(i);
+  seed += Date.now() % 100;
+
+  const crystal = data.crystals[seed % data.crystals.length];
+  const score = data.scores[seed % data.scores.length];
+  const titleIdx = seed % data.titles.length;
+  const adviceIdx = seed % data.advices.length;
+
+  // 水晶
+  document.getElementById('resultCrystal').textContent = crystal;
+
+  // 分数
+  const stars = '⭐'.repeat(score) + '☆'.repeat(5 - score);
+  document.getElementById('resultScore').innerHTML = `<span class="star">${stars}</span> <span>${['普通', '不错', '很好', '超棒', '爆棚'][score - 1]}运势</span>`;
+
+  // 标题
+  document.getElementById('resultTitle').textContent = data.titles[titleIdx];
+  document.getElementById('resultSubtitle').textContent = data.subtitles[titleIdx % data.subtitles.length];
+
+  // 详情
+  const details = data.details(seed);
+  document.getElementById('resultDetail').innerHTML = details.map(d =>
+    `<div class="item"><span class="key">${d.key}</span><span class="val">${d.val}</span></div>`
+  ).join('');
+
+  // 建议
+  let advice = data.advices[adviceIdx];
+  if (question && question.length > 1) {
+    advice = `关于你问的"${question.length > 15 ? question.slice(0, 15) + '…' : question}"——` + advice;
+  }
+  if (mbti) {
+    advice += `\n\n${mbti}的你，天生就拥有独特的视角和力量。相信自己的直觉，它会带你走向正确的方向。`;
+  }
+  document.getElementById('resultAdvice').textContent = advice;
+
+  // 标签
+  const tags = [...data.tags].sort(() => Math.random() - 0.5).slice(0, 4);
+  document.getElementById('resultTags').innerHTML = tags.map(t => `<span class="tag">${t}</span>`).join('');
+
+  // 保存到 localStorage
+  saveHistory(name, currentMode, score, data.titles[titleIdx]);
+}
+
+function saveHistory(name, mode, score, title) {
+  const history = JSON.parse(localStorage.getItem('fortune_history') || '[]');
+  history.unshift({ name, mode, score, title, time: new Date().toLocaleString() });
+  if (history.length > 20) history.length = 20;
+  localStorage.setItem('fortune_history', JSON.stringify(history));
+}
+
+function resetApp() {
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('inputCard').classList.remove('hidden');
+  document.getElementById('nameInput').value = '';
+  document.getElementById('questionInput').value = '';
+  document.getElementById('inputCard').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
